@@ -1,0 +1,32 @@
+name: 'Photon Image Runner'
+description: 'Action to modify an os image, targeted at coprocessor images for PhotonVision'
+inputs:
+  image_url:
+    description: 'The url for the base image'
+    required: true
+    default: ''
+  additiona_mb:
+    description: 'Amount (in MB) to increase the size of the image'
+    reqiured: false
+    default: 0
+  commands:
+    description: 'The commands to run in the image'
+    required: true
+    default: 'echo "No commands provided"'
+  root_partition:
+    description: 'Partition number for root'
+    required: true
+    value: 2
+outputs:
+  image:
+    description: 'Path to modified image'
+    value: ${{ steps.step_name.outputs.image }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Get base image
+      run: |
+          ${GITHUB_ACTION_PATH}/get_image.sh ${{ inputs.image_url }}
+      shell: bash
+      id: get_image
+      

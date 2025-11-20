@@ -1,2 +1,3 @@
 # photon-image-runner
-Workflow to modify os images, targeted at coprocessor images for PhotonVision
+Action to modify os images, targeted at coprocessor images for PhotonVision
+
