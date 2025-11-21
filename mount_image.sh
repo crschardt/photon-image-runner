@@ -1,9 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-image=$1
+image="$1"
 additional_mb=$2
 rootpartition=$3
+echo "rootpartition=${rootpartition}" >> "$GITHUB_ENV"
 
 ####
 # Prepare and mount the image

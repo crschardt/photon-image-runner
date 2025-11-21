@@ -36,17 +36,15 @@ runs:
       id: mount_image
     - name: Run commands
       run: |
-          env
           echo "Running the commands"
           chroot_scriptdir=/tmp/build
-          scriptdir=${{ env.rootdir }}${chroot_scriptdir}
+          scriptdir="${{ env.rootdir }}${chroot_scriptdir}"
           sudo mkdir --parents "${scriptdir}"
           sudo mount --bind "${{ github.workspace }}" "${scriptdir}"
 
           cat >> "${scriptdir}/commands.sh" << EOF
           #!/bin/bash
           set -euo pipefail
-          export DEBIAN_FRONTEND=noninteractive
           cd "${chroot_scriptdir}"
           ${{ inputs.commands }}
           EOF
@@ -56,3 +54,8 @@ runs:
           sudo --preserve-env chroot "${{ env.rootdir }}" bash -c "${chroot_scriptdir}/commands.sh"
       shell: bash
       id: run_commands
+    - name: Clean up and pack image
+      run: |
+          sudo --preserve-env bash ${GITHUB_ACTION_PATH}/pack_image.sh "${{ steps.get_image.outputs.image }}"
+      shell: bash
+      id: pack_image

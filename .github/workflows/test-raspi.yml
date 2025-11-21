@@ -20,8 +20,6 @@ jobs:
               uname -a
               lsblk
               echo "${loopdev}"
-              ls -l
-              env
 
 
 
