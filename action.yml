@@ -5,7 +5,7 @@ inputs:
     description: 'The url for the base image'
     required: true
     default: ''
-  additiona_mb:
+  additional_mb:
     description: 'Amount (in MB) to increase the size of the image'
     reqiured: false
     default: 0
@@ -16,7 +16,7 @@ inputs:
   root_partition:
     description: 'Partition number for root'
     required: false
-    value: 2
+    default: '2'
 outputs:
   image:
     description: 'Path to modified image'
@@ -29,4 +29,8 @@ runs:
           ${GITHUB_ACTION_PATH}/get_image.sh ${{ inputs.image_url }}
       shell: bash
       id: get_image
-
+    - name: Mount image
+      run: |
+          sudo --preserve-env=GITHUB_OUTPUT bash "${GITHUB_ACTION_PATH}/mount_image.sh" "${{ steps.get_image.outputs.image }}" "${{ inputs.additional_mb }}" "${{ inputs.root_partition }}"
+      shell: bash
+      id: mount_image

@@ -17,7 +17,7 @@ jobs:
           image_url: https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64-lite.img.xz
           commands: |
               echo "Testing Raspberry Pi image"
-              unmae -a
+              uname -a
               lsblk
               cat /proc/cpuinfo
 
