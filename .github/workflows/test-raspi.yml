@@ -15,7 +15,8 @@ jobs:
       - uses: photonvision/photon-image-runner@HEAD
         with:
           image_url: https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2025-05-13/2025-05-13-raspios-bookworm-arm64-lite.img.xz
-          additional_mb: 500
+          additional_mb: 2000
+          minimum_free_mb: 1500
           commands: |
               echo "Testing Raspberry Pi image"
               uname -a
