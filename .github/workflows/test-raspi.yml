@@ -29,6 +29,7 @@ jobs:
         with:
           name: ${{ steps.build_image.outputs.image }}.xz
           path: ${{ steps.build_image.outputs.image }}.xz
+          compression-level: 0
           if-no-files-found: error
           retention-days: 1
 
