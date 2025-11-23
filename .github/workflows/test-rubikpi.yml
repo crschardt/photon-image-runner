@@ -1,4 +1,4 @@
-name: 'Test modifying a Raspberry Pi image'
+name: 'Test modifying a Rubik Pi image'
 on:
   push:
     branches:
@@ -12,23 +12,36 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
-      - uses: photonvision/photon-image-runner@HEAD
+      - uses: ./
         with:
           image_url: https://people.canonical.com/~platform/images/qualcomm-iot/rubikpi3/ubuntu-server-24.04/x00/ubuntu-24.04-preinstalled-server-arm64+rubikpi3-20250912-127.yaml
           minimum_free_mb: 2000
+          root_location: "offset=569376768"
+          shrink_image: "no"
           commands: |
-              echo "Testing Raspberry Pi image"
+              echo "Testing Rubik Pi image"
               uname -a
               lsblk
               echo "${loopdev}"
         id: build_image
       - name: Compress image
         run: |
-            sudo xz -T 0 -v ${{ steps.build_image.outputs.image }}
+            imagedir=$(dirname ${{ steps.build_image.outputs.image }})
+            tardir=${RUNNER_TEMP}/photonvision_rubikpi3
+            mkdir --parents ${tardir}
+            if ls ${imagedir}*.tar.gz 1>/dev/null 2>&1; then
+              sudo tar -xzf ${imagedir}*.tar.gz -C ${tardir}
+            fi
+            sudo mv ${imagedir}/rawprogram*.xml ${tardir}/ 2>/dev/null || true
+            sudo mv ${imagedir}/dtb.bin ${tardir}/ 2>/dev/null || true
+            sudo mv ${imagedir}/*.img ${tardir}/ 2>/dev/null || true
+            sudo find ${tardir} -mindepth 2 -type f -exec mv {} ${tardir}/ \;
+            sudo find ${tardir} -mindepth 1 -type d -empty -delete
+            sudo tar -I 'xz -T0' -cf ./photonvision_rubikpi3.tar.xz ${tardir} --checkpoint=10000 --checkpoint-action=echo='%T'
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.build_image.outputs.image }}.xz
-          path: ${{ steps.build_image.outputs.image }}.xz
+          name: photonvision_rubikpi3.tar.xz
+          path: ./photonvision_rubikpi3.tar.xz
           compression-level: 0
           if-no-files-found: error
           retention-days: 1

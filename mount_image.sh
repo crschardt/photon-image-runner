@@ -4,26 +4,41 @@ set -euo pipefail
 image="$1"
 additional_mb=$2
 minimum_free=$3
-rootpartition=$4
-echo "rootpartition=${rootpartition}" >> "$GITHUB_ENV"
+root_location=$4
 
 ####
 # Prepare and mount the image
 ####
 
-loopdev=$(losetup --find --show --partscan ${image})
+case ${root_location,,} in
+    partition* )
+        rootpartition=${root_location#*=}
+        loopdev=$(losetup --find --show --partscan ${image})
+        rootdev="${loopdev}p${rootpartition}"
+    ;;
+    offset* )
+        rootpartition=1
+        rootoffset=${root_location#*=}
+        loopdev=$(losetup --find --show --offset=${rootoffset} ${image})
+        rootdev="${loopdev}"
+    ;;
+    * ) 
+        echo "Don't understand value for root_location: ${root_location}"
+        exit 1
+    ;;
+esac
+
 echo "loopdev=${loopdev}" >> "$GITHUB_ENV"
+echo "rootpartition=${rootpartition}" >> "$GITHUB_ENV"
+echo "rootdev=${rootdev}" >> "$GITHUB_ENV"
+echo "Root device is: ${rootdev}"
 
 echo "Partitions in the mounted image:"
 lsblk "${loopdev}"
 
 part_type=$(blkid -o value -s PTTYPE "${loopdev}")
 echo "part_type=${part_type}" >> "$GITHUB_ENV"
-echo "Image is using ${part_type} partition table"
-
-rootdev="${loopdev}p${rootpartition}"
-echo "rootdev=${rootdev}" >> "$GITHUB_ENV"
-echo "Root device is: ${rootdev}"
+echo "Image is using ${part_type:=NO} partition table"
 
 rootdir="./rootfs"
 rootdir="$(realpath ${rootdir})"
@@ -48,9 +63,11 @@ if [[ ${additional_mb} -gt 0 ]]; then
     if [[ "${part_type}" == "gpt" ]]; then
         sgdisk --move-second-header "${loopdev}"
     fi
-    parted --script "${loopdev}" resizepart ${rootpartition} 100%
-    e2fsck -p -f "${loopdev}p${rootpartition}"
-    resize2fs "${loopdev}p${rootpartition}"
+    if [[ ${rootpartition} -gt 0 ]]; then
+        parted --script "${loopdev}" resizepart ${rootpartition} 100%
+    fi
+    e2fsck -p -f "${rootdev}"
+    resize2fs "${rootdev}"
     echo "Finished resizing disk image."
 fi
 
@@ -69,6 +86,7 @@ df --block-size=M "${rootdir}"
 # Set up the environment
 mount -t proc /proc "${rootdir}/proc"
 mount -t sysfs /sys "${rootdir}/sys"
+mount -t tmpfs /tmpfs "${rootdir}/run"
 mount --rbind /dev "${rootdir}/dev"
 
 # Temporarily replace resolv.conf for networking
