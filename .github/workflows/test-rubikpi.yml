@@ -32,7 +32,7 @@ jobs:
             echo "Contents of imagedir: ${imagedir}"
             ls -la ${imagedir}
             if ls ${imagedir}/*.tar.gz 1>/dev/null 2>&1; then
-              sudo tar -xzf ${imagedir}/*.tar.gz -C ${tardir} --strip-components=1
+              sudo tar -xzf ${imagedir}/*.tar.gz -C ${tardir}
             fi
             sudo mv ${imagedir}/rawprogram*.xml ${tardir}/ 2>/dev/null || true
             sudo mv ${imagedir}/dtb.bin ${tardir}/ 2>/dev/null || true
