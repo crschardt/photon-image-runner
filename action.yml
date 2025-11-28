@@ -61,7 +61,6 @@ runs:
 
           cat >> "${scriptdir}/commands.sh" << EOF
           #!/bin/bash
-          set -x
           # set -exo pipefail
           # export SHELLOPTS
           # export BASHOPTS

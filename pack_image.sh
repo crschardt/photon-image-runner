@@ -11,8 +11,8 @@ if [[ -e "${rootdir}/etc/resolv.conf.bak" ]]; then
     mv "${rootdir}/etc/resolv.conf.bak" "${rootdir}/etc/resolv.conf"
 fi
 
-# echo "Zero filling empty space"
-# (cat /dev/zero > "${rootdir}/zeros" 2>/dev/null || true); sync; rm "${rootdir}/zeros";
+echo "Zero filling empty space"
+(cat /dev/zero > "${rootdir}/zeros" 2>/dev/null || true); sync; rm "${rootdir}/zeros";
 
 umount --recursive "${rootdir}"
 

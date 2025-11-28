@@ -23,13 +23,11 @@ jobs:
               uname -a
               lsblk
               echo "${loopdev}"
-              echo "$( pwd )"
-              ls -la
         id: build_image
       - name: Compress image
         run: |
             imagedir=$(dirname ${{ steps.build_image.outputs.image }})
-            tardir=./photonvision_rubikpi3
+            tardir=./photonvision_rubikpi3_fromYAML
             mkdir --parents ${tardir}
             echo "Contents of imagedir: ${imagedir}"
             ls -la ${imagedir}
@@ -45,11 +43,11 @@ jobs:
             sudo find ${tardir} -mindepth 1 -type d -empty -delete
             echo "After cleanup contents of tardir: ${tardir}"
             ls -la ${tardir}
-            sudo tar -I 'xz -T0' -cf ./photonvision_rubikpi3.tar.xz ${tardir} --checkpoint=10000 --checkpoint-action=echo='%T'
+            sudo tar -I 'xz -T0' -cf ./photonvision_rubikpi3_fromYAML.tar.xz ${tardir} --checkpoint=10000 --checkpoint-action=echo='%T'
       - uses: actions/upload-artifact@v4
         with:
-          name: photonvision_rubikpi3.tar.xz
-          path: ./photonvision_rubikpi3.tar.xz
+          name: photonvision_rubikpi3_fromYAML.tar.xz
+          path: ./photonvision_rubikpi3_fromYAML.tar.xz
           compression-level: 0
           if-no-files-found: error
           retention-days: 1
