@@ -27,7 +27,7 @@ jobs:
       - name: Compress image
         run: |
             imagedir=$(dirname ${{ steps.build_image.outputs.image }})
-            tardir=./photonvision_rubikpi3_fromYAML
+            tardir=photonvision_rubikpi3_fromYAML
             mkdir --parents ${tardir}
             echo "Contents of imagedir: ${imagedir}"
             ls -la ${imagedir}
