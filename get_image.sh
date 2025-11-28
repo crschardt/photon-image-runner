@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 url=$1
 download_path="${RUNNER_TEMP}/image"
@@ -30,8 +30,7 @@ else
 fi
 
 echo "Image: ${image}"
-
-ls -l ${download_path}
+ls -la ${download_path}
 
 if [[ ${image} = *.xz ]]; then
     echo "Unzipping ${image}"
@@ -39,7 +38,15 @@ if [[ ${image} = *.xz ]]; then
     image=${image%.xz}
 fi
 
-ls -l ${download_path}
+if [[ ${image} = *.tar ]]; then
+    echo "Untarring ${image}"
+    tar -xf ${image}
+    rm ${image}
+    image=$(find . -type f \( -name '*.img' \) -exec ls -s {} + 2>/dev/null | sort -rn | head -n1 | awk '{print $2}')
+fi
+
+echo "Image: ${image}"
+ls -la $(dirname ${image})
 
 if [[ ${image} != *.img ]]; then
     echo "${image} isn't a valid image file"

@@ -1,0 +1,48 @@
+name: 'Test modifying a Rubik Pi tar image'
+on:
+  push:
+    branches:
+      - 'main'
+      - 'releases/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          image_url: https://github.com/PhotonVision/photon-image-modifier/releases/download/v2026.0.4/photonvision_rubikpi3.tar.xz
+          minimum_free_mb: 2000
+          root_location: "offset=569376768"
+          shrink_image: "no"
+          commands: |
+              echo "Testing Rubik Pi tar image"
+              uname -a
+              lsblk
+              echo "${loopdev}"
+        id: build_image
+      - name: Compress image
+        run: |
+            imagedir=$(dirname ${{ steps.build_image.outputs.image }})
+            echo "Imagedir: ${imagedir}"
+            ls -la ${imagedir}
+            tardir=photonvision_rubikpi3_fromTAR
+            mkdir --parents ${tardir}
+            echo "Tardir: ${tardir}"
+            ls -la ${tardir}
+            sudo mv ${imagedir}/* ${tardir}/
+            echo "After move"
+            ls -la ${tardir}
+            sudo tar -I 'xz -T0' -cf ./photonvision_rubikpi3_fromTAR.tar.xz ${tardir} --checkpoint=10000 --checkpoint-action=echo='%T'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: photonvision_rubikpi3_fromTAR.tar.xz
+          path: ./photonvision_rubikpi3_fromTAR.tar.xz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 1
+
+

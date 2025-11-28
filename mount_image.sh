@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 image="$1"
 additional_mb=$2
@@ -17,7 +17,7 @@ case ${root_location,,} in
         rootdev="${loopdev}p${rootpartition}"
     ;;
     offset* )
-        rootpartition=1
+        rootpartition=0
         rootoffset=${root_location#*=}
         loopdev=$(losetup --find --show --offset=${rootoffset} ${image})
         rootdev="${loopdev}"
@@ -65,9 +65,9 @@ if [[ ${additional_mb} -gt 0 ]]; then
     fi
     if [[ ${rootpartition} -gt 0 ]]; then
         parted --script "${loopdev}" resizepart ${rootpartition} 100%
+        e2fsck -p -f "${rootdev}"
+        resize2fs "${rootdev}"
     fi
-    e2fsck -p -f "${rootdev}"
-    resize2fs "${rootdev}"
     echo "Finished resizing disk image."
 fi
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 ####
 # Clean up and shrink image
@@ -16,7 +16,7 @@ echo "Zero filling empty space"
 
 umount --recursive "${rootdir}"
 
-if [[ ${shrink,,} = y* ]]; then
+if [[ ${shrink,,} = y* && ${rootpartition} -gt 0 ]]; then
     echo "Resizing root filesystem to minimal size."
     e2fsck -v -f -p -E discard "${rootdev}"
     resize2fs -M "${rootdev}"
@@ -45,6 +45,7 @@ if [[ ${shrink,,} = y* ]]; then
         fi            
         echo "Shrinking image from ${initial_image_size} to ${image_size} bytes."
         truncate -s "${image_size}" "${image}"
+        losetup --set-capacity "${loopdev}"
         if [[ "${part_type}" == "gpt" ]]; then
             # use sgdisk to fix the secondary GPT after truncation 
             sgdisk -e "${image}"
