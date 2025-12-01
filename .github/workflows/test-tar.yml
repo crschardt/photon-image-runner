@@ -23,6 +23,8 @@ jobs:
               uname -a
               lsblk
               echo "${loopdev}"
+              echo "/boot contents:"
+              ls -la /boot
         id: build_image
       - name: Compress image
         run: |

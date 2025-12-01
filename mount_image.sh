@@ -5,19 +5,28 @@ image="$1"
 additional_mb=$2
 minimum_free=$3
 root_location=$4
+bootpartition=$5
 
 ####
 # Prepare and mount the image
 ####
 
-case ${root_location,,} in
+case "${root_location,,}" in
     partition* )
         rootpartition=${root_location#*=}
+        if [[ "${rootpartition}" = "${bootpartition}" ]]; then
+            echo "Boot partition cannot be equal to root partition"
+            if [ "${bootpartition}" = "1" ]; then
+                echo "Forgot to unset bootpartition ?"
+            fi
+            exit 1
+        fi
         loopdev=$(losetup --find --show --partscan ${image})
         rootdev="${loopdev}p${rootpartition}"
     ;;
     offset* )
         rootpartition=0
+        bootpartition=
         rootoffset=${root_location#*=}
         loopdev=$(losetup --find --show --offset=${rootoffset} ${image})
         rootdev="${loopdev}"
@@ -28,10 +37,18 @@ case ${root_location,,} in
     ;;
 esac
 
+if [[ -n "${bootpartition}" ]]; then
+    bootdev="${loopdev}p${bootpartition}"
+else
+    bootdev=
+fi   
+
 echo "loopdev=${loopdev}" >> "$GITHUB_ENV"
 echo "rootpartition=${rootpartition}" >> "$GITHUB_ENV"
 echo "rootdev=${rootdev}" >> "$GITHUB_ENV"
+echo "bootdev=${bootdev}" >> "$GITHUB_ENV"
 echo "Root device is: ${rootdev}"
+echo "Boot device is: ${bootdev:-UNSET}"
 
 echo "Partitions in the mounted image:"
 lsblk "${loopdev}"
@@ -79,6 +96,11 @@ lsblk "${loopdev}"
 mount "${rootdev}" "${rootdir}"
 echo "rootdir=${rootdir}" >> "$GITHUB_ENV"
 echo "Root directory is: ${rootdir}"
+
+if [[ -n "${bootdev}" ]]; then
+    [ ! -d "${rootdir}/boot" ] && mkdir "${rootdir}/boot"
+    mount "${bootdev}" "${rootdir}/boot"
+fi
 
 echo "Space in root directory:"
 df --block-size=M "${rootdir}"

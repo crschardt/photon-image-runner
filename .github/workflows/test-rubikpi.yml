@@ -18,6 +18,7 @@ jobs:
           minimum_free_mb: 2000
           root_location: "offset=569376768"
           shrink_image: "no"
+          boot_partition: ""
           commands: |
               echo "Testing Rubik Pi image"
               uname -a
