@@ -1,0 +1,40 @@
+name: 'Test modifying a Orange Pi image'
+on:
+  push:
+    branches:
+      - 'main'
+      - 'releases/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./  # photonvision/photon-image-runner@HEAD
+        with:
+          image_url: https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5.img.xz
+          additional_mb: 200
+          minimum_free_mb: 2000
+          commands: |
+              echo "Testing Orange Pi image"
+              lsblk
+              echo "${loopdev}"
+              echo "/boot contents:"
+              ls -la /boot
+              touch /boot/photon-image-modifier-was-here
+        id: build_image
+      - name: Compress image
+        run: |
+            sudo xz -T 0 -v -k ${{ steps.build_image.outputs.image }}
+            
+      - uses: actions/upload-artifact@v6
+        with:
+          name: raspi.img.xz
+          path: ${{ steps.build_image.outputs.image }}.xz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 1
+
+

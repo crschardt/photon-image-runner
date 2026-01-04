@@ -82,6 +82,7 @@ if [[ ${additional_mb} -gt 0 ]]; then
     fi
     if [[ ${rootpartition} -gt 0 ]]; then
         parted --script "${loopdev}" resizepart ${rootpartition} 100%
+        sync
         e2fsck -p -f "${rootdev}"
         resize2fs "${rootdev}"
     fi
