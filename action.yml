@@ -3,16 +3,16 @@ description: 'Action to modify an os image, targeted at coprocessor images for P
 
 inputs:
   image_url:
-    description: 'The url for the base image'
+    description: 'The url for the base image. If it is a local file, provide the file path'
     required: true
     default: ''
   additional_mb:
     description: 'Amount (in MB) to increase the size of the image'
-    reqiured: false
+    required: false
     default: 0
   minimum_free_mb:
     description: 'Amount (in MB) of free space that should be available for commands'
-    reqiured: false
+    required: false
     default: 0
   commands:
     description: 'The commands to run in the image'
@@ -28,7 +28,7 @@ inputs:
     default: 'partition=2'
   shrink_image:
     description: 'Make the output image file as small as possible'
-    reqiured: false
+    required: false
     default: 'yes'
 
 outputs:

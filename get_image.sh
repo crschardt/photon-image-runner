@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euxo pipefail
+shopt -s extglob
 
 url=$1
 download_path="${RUNNER_TEMP}/image"
@@ -8,26 +9,38 @@ mkdir --parent "${download_path}"
 
 image=""
 
-if [[ ${url} = @(*.yaml|*.yml) ]]; then
-    apt-get --quiet update
-    apt-get --yes --quiet install yq
-    wget --no-verbose --output-document="manifest.yaml" "${url}"
-    echo "=== Manifest contents ==="
-    cat manifest.yaml
-    echo "========================="
-    yq -r '.urls[] | "\(.url) \(.sha256sum)"' ./manifest.yaml > urls
-    while read -r file_url sha; do
-        filename="$(basename ${file_url})"
-        echo "Downloading: ${filename} from ${file_url}"
-        wget --no-verbose --output-document=${download_path}/${filename} ${file_url}
-        echo "$sha ${download_path}/$filename" | sha256sum -c -
-        [[ ${filename} = *.img.xz ]] && image="${download_path}/${filename}"
-    done < urls
-else 
-    image="${download_path}/$(basename ${url})"
-    echo "Downloading ${image} from ${url}"
-    wget --no-verbose --output-document="${image}" ${url}
-fi
+case ${url} in
+    file://* )
+        echo "Using local file as image: ${url}"
+        image="${url#file://}"
+    ;;
+    http?(s)://*.yam?(l) )
+        apt-get --quiet update
+        apt-get --yes --quiet install yq
+        echo "Downloading manifest from ${url}"
+        wget --no-verbose --output-document="manifest.yaml" "${url}"
+        echo "=== Manifest contents ==="
+        cat manifest.yaml
+        echo "========================="
+        yq -r '.urls[] | "\(.url) \(.sha256sum)"' ./manifest.yaml > urls
+        while read -r file_url sha; do
+            filename="$(basename ${file_url})"
+            echo "Downloading: ${filename} from ${file_url}"
+            wget --no-verbose --output-document=${download_path}/${filename} ${file_url}
+            echo "$sha ${download_path}/$filename" | sha256sum -c -
+            [[ ${filename} = *.img.xz ]] && image="${download_path}/${filename}"
+        done < urls
+    ;;
+    http?(s)://* )
+        image="${download_path}/$(basename ${url})"
+        echo "Downloading ${image} from ${url}"
+        wget --no-verbose --output-document="${image}" ${url}
+    ;;
+    * )
+        echo "Unrecognized image source ${url}. Exiting!"
+        exit 1
+    ;;
+esac
 
 echo "Image: ${image}"
 ls -la ${download_path}

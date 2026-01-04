@@ -11,7 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./
         with:
           image_url: https://people.canonical.com/~platform/images/qualcomm-iot/rubikpi3/ubuntu-server-24.04/x01/ubuntu-24.04-preinstalled-server-arm64+rubikpi3-20250926-145.yaml
@@ -25,6 +25,22 @@ jobs:
               lsblk
               echo "${loopdev}"
         id: build_image
+
+      - name: Test using image file
+        uses: ./  # photonvision/photon-image-runner@HEAD
+        with:
+          image_url: "file://${{ steps.build_image.outputs.image }}"
+          root_location: "offset=569376768"
+          shrink_image: "no"
+          boot_partition: ""
+          commands: |
+              echo "Testing file access Rubik Pi image"
+              uname -a
+              lsblk
+              echo "/boot contents:"
+              ls -la /boot
+              touch /boot/photon-image-modifier-file-was-here
+
       - name: Compress image
         run: |
             imagedir=$(dirname ${{ steps.build_image.outputs.image }})
@@ -45,7 +61,7 @@ jobs:
             echo "After cleanup contents of tardir: ${tardir}"
             ls -la ${tardir}
             sudo tar -I 'xz -T0' -cf ./photonvision_rubikpi3_fromYAML.tar.xz ${tardir} --checkpoint=10000 --checkpoint-action=echo='%T'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: photonvision_rubikpi3_fromYAML.tar.xz
           path: ./photonvision_rubikpi3_fromYAML.tar.xz
